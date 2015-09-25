@@ -15,6 +15,7 @@ block_A::block_A(int m_ori,int n_ori)
     speed=10;
     M=m_ori+2;//10+2
     N=n_ori+2;//20+2
+    //init MAP
     MAP=(BB**)malloc(M*sizeof(BB*));
     for(int i=0; i<M; i++) {//N行，M列
         MAP[i]=static_cast<BB*>(new BB[N]);
@@ -23,19 +24,31 @@ block_A::block_A(int m_ori,int n_ori)
         for(int j1=0;j1<N;j1++) {
             if(i1==M-1||j1==N-1||i1==0||j1==0) {
                 MAP[i1][j1].value=1;
-                //cout<<"set to 1:"<<i1<<","<<j1<<endl;
             } else MAP[i1][j1].value=0;
         }
     }
-    nextMAP=(BB**)malloc(4*sizeof(BB*));
-    for (int i=0; i<4; i++) {
-        nextMAP[i]=static_cast<BB*>(new BB[4]);
+    //init shadowMAP
+    shadowMAP=(BB**)malloc(M*sizeof(BB*));
+    for(int i=0; i<M; i++) {//N行，M列
+        shadowMAP[i]=static_cast<BB*>(new BB[N]);
     }
-    for (int i=0; i<4; i++) {
-        for (int j=0; j<4; j++) {
+    for(int i1=0;i1<M;i1++){
+        for(int j1=0;j1<N;j1++) {//clear everything
+            if (j1%2 ==0) shadowMAP[i1][j1].value=1;
+            shadowMAP[i1][j1].value=0;
+        }
+    }
+    //init nextMAP
+    nextMAP=(BB**)malloc(6*sizeof(BB*));
+    for (int i=0; i<6; i++) {
+        nextMAP[i]=static_cast<BB*>(new BB[6]);
+    }
+    for (int i=0; i<6; i++) {
+        for (int j=0; j<6; j++) {
             nextMAP[i][j].value=0;
         }
     }
+    
     srand((unsigned)time(0));
     randomNextProp();
     //reset();
@@ -64,11 +77,8 @@ void block_A::newGame()
             } else MAP[i1][j1].value=0;
         }
     }
-    for (int i=0; i<4; i++) {
-        nextMAP[i]=static_cast<BB*>(new BB[4]);
-    }
-    for (int i=0; i<4; i++) {
-        for (int j=0; j<4; j++) {
+    for (int i=0; i<6; i++) {
+        for (int j=0; j<6; j++) {
             nextMAP[i][j].value=0;
         }
     }
@@ -82,10 +92,13 @@ void block_A::createBlk()
     num=next_num;
     style=next_style;
     color=next_color;
-    //clr(nextMAP, 1, 2, next_num, next_style, next_color);
+    //cout<<"newblk["<<x<<","<<y<<","<<next_num<<","<<next_style<<"]"<<endl;
+    clr(nextMAP, 2, 2, next_num, next_style, next_color);
     randomNextProp();//随机化初始下一个块的形状，角度与颜色
-    //set(nextMAP, 1, 2, next_num, next_style, next_color);
+    //cout<<"next newblk["<<x<<","<<y<<","<<next_num<<","<<next_style<<"]"<<endl;
+    set(nextMAP, 2, 2, next_num, next_style, next_color);
     if (exist(x, y, num, style)) {
+        cout<<"is over:"<<x<<","<<y<<endl;
         isover=true;
         isend=true;
         return;
@@ -142,74 +155,115 @@ int block_A::prestyle(int style1)//前一种形态
     return style1;
 }
 //--------------------------------------
-void block_A::setp(BB **MAP_, int x1=0,int y1=0,cocos2d::Color3B color_=cocos2d::Color3B::GREEN)
-{
-    MAP_[x+x1][y+y1].value=1;
-    MAP_[x+x1][y+y1].color=color_;
+void block_A::setp(BB **MAP_, int xori, int yori, int x1=0,int y1=0,cocos2d::Color3B color_=cocos2d::Color3B::GREEN)
+{                             
+    MAP_[xori+x1][yori+y1].value=1;
+    MAP_[xori+x1][yori+y1].color=color_;
 }
-void block_A::clrp(BB **MAP_, int x1=0,int y1=0,cocos2d::Color3B color_=cocos2d::Color3B::GREEN)
-{
-    //cout<<"clearp:"<<x+x1<<","<<y+y1<<endl;
-    MAP_[x+x1][y+y1].value=0;
-    MAP_[x+x1][y+y1].color=color_;
+void block_A::clrp(BB **MAP_, int xori, int yori, int x1=0,int y1=0,cocos2d::Color3B color_=cocos2d::Color3B::GREEN)
+{                             
+    MAP_[xori+x1][yori+y1].value=0;
+    MAP_[xori+x1][yori+y1].color=color_;
 }
 void block_A::doChange(fun func, BB **MAP_, int x1, int y1, int num1, int style1, cocos2d::Color3B color)
 {
-    x=x1;
-    y=y1;
-    style=style1;
     switch(num1)
     {
         case 1:
             switch(style1)
         {
-            case 1: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,1,-1,color);(this->*func)(MAP_,0,1,color);
+            case 1:
+            /*    *
+             *   o*
+             *   *
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,1,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);
                 break;
-            case 2: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,1,1,color);
+            case 2:
+            /*
+             *  *o
+             *   **
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,1,color);
                 break;
         }
             break;
         case 2:
             switch(style1)
         {
-            case 1: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,1,1,color);
+            case 1:
+            /*
+             *   o*
+             *   **
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,1,1,color);
                 break;
         }
             break;
         case 3:
             switch(style1)
         {
-            case 1: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,0,-1,color);
+            case 1:
+            /*
+             *  *o*
+             *   *
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);
                 break;
-            case 2: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,-1,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,1,0,color);
+            case 2:
+            /*
+             *   *
+             *   o*
+             *   *
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,0,color);
                 break;
-            case 3: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,0,1,color);
+            case 3:
+            /*
+             *   *
+             *  *o*
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,0,1,color);
                 break;
-            case 4: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,-1,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,-1,0,color);
+            case 4:
+            /*   *
+             *  *o
+             *   *
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,-1,0,color);
                 break;
         }
             break;
         case 4:
             switch(style1)
         {
-            case 1: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,-1,1,color);
+            case 1:
+            /*
+             *  *o*
+             *  *
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,-1,1,color);
                 break;
-            case 2: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,-1,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,-1,-1,color);
+            case 2:
+            /*  **
+             *   o
+             *   *
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,-1,-1,color);
                 break;
-            case 3: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,1,-1,color);
+            case 3:
+            /*
+             *    *
+             *  *o*
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,1,-1,color);
                 break;
-            case 4: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,-1,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,1,1,color);
+            case 4:
+            /*   *
+             *   o
+             *   **
+             */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,1,color);
                 break;
         }
             break;
@@ -217,38 +271,56 @@ void block_A::doChange(fun func, BB **MAP_, int x1, int y1, int num1, int style1
             switch(style1)
         {
             case 1: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,1,1,color);
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,1,1,color);
                 break;
             case 2: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,-1,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,-1,1,color);
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,-1,1,color);
                 break;
             case 3: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,-1,-1,color);
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,-1,-1,color);
                 break;
             case 4: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,-1,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,1,-1,color);
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,-1,color);
                 break;
         }
             break;
         case 6:
             switch(style1)
         {
-            case 1: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,-1,-1,color);
+            case 1:
+                /*  *
+                 *  *o
+                 *   *
+                 */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,-1,-1,color);
                 break;
-            case 2: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,-1,1,color);
+            case 2:
+                /*
+                 *   o*
+                 *  **
+                 */
+                (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,-1,1,color);
                 break;
         }
             break;
         case 7:
             switch(style1)
         {
-            case 1: 
-                (this->*func)(MAP_,0,0,color);(this->*func)(MAP_,0,1,color);(this->*func)(MAP_,0,2,color);(this->*func)(MAP_,0,3,color);
+            case 1:
+                /*    *
+                 *    o
+                 *    *
+                 *    *
+                 */
+                (this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,0,2,color);
                 break;
-            case 2: 
-                (this->*func)(MAP_,-1,0,color);(this->*func)(MAP_,0,0,color);(this->*func)(MAP_,1,0,color);(this->*func)(MAP_,2,0,color);
+            case 2:
+                /*
+                 *
+                 *   *o***
+                 *
+                 */
+                (this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,2,0,color);
                 break;
         }
             break;
@@ -257,7 +329,6 @@ void block_A::doChange(fun func, BB **MAP_, int x1, int y1, int num1, int style1
 //-------------------------------------------------------------------------------------
 void block_A::set(BB **MAP_, int x1,int y1,int num1, int style1, cocos2d::Color3B color)
 {                                                  
-    //cout<<"set("<<x<<","<<y<<","<<num1<<","<<style1<<")"<<endl;
     doChange(&block_A::setp, MAP_, x1, y1, num1, style1, color);
 }
 
@@ -269,9 +340,9 @@ void block_A::clr(BB **MAP_, int x1,int y1,int num1,int style1,cocos2d::Color3B 
 
 //----------------------------------------------------------------------------
 
-bool block_A::existp(int x1,int y1)
+bool block_A::existp(int xori, int yori, int x1,int y1)
 {
-    if(MAP[x+x1][y+y1].value==1)
+    if(MAP[xori+x1][yori+y1].value==1)
         return true;
     else
         return false;
@@ -281,22 +352,20 @@ bool block_A::existp(int x1,int y1)
 
 bool block_A::exist(int x1,int y1,int num1,int style1)
 {
-    x=x1;
-    y=y1;
-    style=style1;
+    //style=style1;
     switch(num1)
     {
         case 1:
             switch(style1)
         {
             case 1: 
-                if(existp(0,0)||existp(1,0)||existp(1,-1)||existp(0,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,1,0)||existp(x1,y1,1,-1)||existp(x1,y1,0,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 2: 
-                if(existp(0,0)||existp(-1,0)||existp(0,1)||existp(1,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,-1,0)||existp(x1,y1,0,1)||existp(x1,y1,1,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
@@ -307,7 +376,7 @@ bool block_A::exist(int x1,int y1,int num1,int style1)
             switch(style1)
         {
             case 1: 
-                if(existp(0,0)||existp(0,1)||existp(1,0)||existp(1,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,0,1)||existp(x1,y1,1,0)||existp(x1,y1,1,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
@@ -318,25 +387,25 @@ bool block_A::exist(int x1,int y1,int num1,int style1)
             switch(style1)
         {
             case 1: 
-                if(existp(0,0)||existp(-1,0)||existp(1,0)||existp(0,-1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,-1,0)||existp(x1,y1,1,0)||existp(x1,y1,0,-1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 2: 
-                if(existp(0,0)||existp(0,-1)||existp(0,1)||existp(1,0))
+                if(existp(x1,y1,0,0)||existp(x1,y1,0,-1)||existp(x1,y1,0,1)||existp(x1,y1,1,0))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 3: 
-                if(existp(0,0)||existp(-1,0)||existp(1,0)||existp(0,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,-1,0)||existp(x1,y1,1,0)||existp(x1,y1,0,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 4: 
-                if(existp(0,0)||existp(0,-1)||existp(0,1)||existp(-1,0))
+                if(existp(x1,y1,0,0)||existp(x1,y1,0,-1)||existp(x1,y1,0,1)||existp(x1,y1,-1,0))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
@@ -347,25 +416,25 @@ bool block_A::exist(int x1,int y1,int num1,int style1)
             switch(style1)
         {
             case 1: 
-                if(existp(0,0)||existp(-1,0)||existp(1,0)||existp(-1,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,-1,0)||existp(x1,y1,1,0)||existp(x1,y1,-1,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 2: 
-                if(existp(0,0)||existp(0,-1)||existp(0,1)||existp(-1,-1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,0,-1)||existp(x1,y1,0,1)||existp(x1,y1,-1,-1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 3: 
-                if(existp(0,0)||existp(-1,0)||existp(1,0)||existp(1,-1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,-1,0)||existp(x1,y1,1,0)||existp(x1,y1,1,-1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 4: 
-                if(existp(0,0)||existp(0,-1)||existp(0,1)||existp(1,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,0,-1)||existp(x1,y1,0,1)||existp(x1,y1,1,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
@@ -376,25 +445,25 @@ bool block_A::exist(int x1,int y1,int num1,int style1)
             switch(style1)
         {
             case 1: 
-                if(existp(0,0)||existp(-1,0)||existp(1,0)||existp(1,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,-1,0)||existp(x1,y1,1,0)||existp(x1,y1,1,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 2: 
-                if(existp(0,0)||existp(0,-1)||existp(0,1)||existp(-1,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,0,-1)||existp(x1,y1,0,1)||existp(x1,y1,-1,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 3: 
-                if(existp(0,0)||existp(-1,0)||existp(1,0)||existp(-1,-1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,-1,0)||existp(x1,y1,1,0)||existp(x1,y1,-1,-1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 4: 
-                if(existp(0,0)||existp(0,-1)||existp(0,1)||existp(1,-1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,0,-1)||existp(x1,y1,0,1)||existp(x1,y1,1,-1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
@@ -405,13 +474,13 @@ bool block_A::exist(int x1,int y1,int num1,int style1)
             switch(style1)
         {
             case 1: 
-                if(existp(0,0)||existp(0,1)||existp(-1,0)||existp(-1,-1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,0,1)||existp(x1,y1,-1,0)||existp(x1,y1,-1,-1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 2: 
-                if(existp(0,0)||existp(1,0)||existp(0,1)||existp(-1,1))
+                if(existp(x1,y1,0,0)||existp(x1,y1,1,0)||existp(x1,y1,0,1)||existp(x1,y1,-1,1))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
@@ -422,13 +491,13 @@ bool block_A::exist(int x1,int y1,int num1,int style1)
             switch(style1)
         {
             case 1: 
-                if(existp(0,0)||existp(0,1)||existp(0,2)||existp(0,3))
+                if(existp(x1,y1,0,-1)||existp(x1,y1,0,0)||existp(x1,y1,0,1)||existp(x1,y1,0,2))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
                 break;
             case 2: 
-                if(existp(-1,0)||existp(0,0)||existp(1,0)||existp(2,0))
+                if(existp(x1,y1,-1,0)||existp(x1,y1,0,0)||existp(x1,y1,1,0)||existp(x1,y1,2,0))
                     temp_vaul =true;
                 else
                     temp_vaul =false;
@@ -445,15 +514,24 @@ void block_A::rotate()
     {
         clr(MAP, x,y,num,style,color);
         if(exist(x,y,num,nextstyle(style))==false) {
+            style=nextstyle(style);
             set(MAP, x,y,num,style,color);
         } else if(exist(x-1,y,num,style)==false) {
+            x-=1;
+            style=nextstyle(style);
             set(MAP, x,y,num,style,color);
         } else if(exist(x+2,y,num,style)==false) {
+            x+=2;
+            style=nextstyle(style);
             set(MAP, x,y,num,style,color);
         } else if(exist(x-1,y-1,num,style)==false) {
+            x-=1;y-=1;
+            style=nextstyle(style);
             set(MAP, x,y,num,style,color);
         } else {
-            set(MAP, x,y+1,num,prestyle(style),color);
+            y+=1;
+            style=prestyle(style);
+            set(MAP, x,y,num,prestyle(style),color);
         }
     }
 }
@@ -463,14 +541,23 @@ void block_A::rotate_re()
     {               
         clr(MAP, x,y,num,style,color);
         if(exist(x,y,num,prestyle(style))==false) {
+            style=prestyle(style);
             set(MAP, x,y,num,style,color);
         } else if(exist(x-1,y,num,style)==false) {
+            x-=1;
+            style=prestyle(style);
             set(MAP, x,y,num,style,color);
         } else if(exist(x+2,y,num,style)==false) {
+            x+=2;
+            style=prestyle(style);
             set(MAP, x,y,num,style,color);
         } else if(exist(x-1,y-1,num,style)==false) {
+            x-=1;y-=1;
+            style=prestyle(style);
             set(MAP, x,y,num,style,color);
         } else {
+            y+=1;
+            style=nextstyle(style);
             set(MAP, x,y+1,num,nextstyle(style),color);
         }
     }
@@ -481,9 +568,10 @@ void block_A::mvleft()
     {               
         clr(MAP, x,y,num,style,color);
         if(exist(x-1,y,num,style)==false) {
+            x-=1;
             set(MAP, x,y,num,style,color);
         } else {
-            set(MAP, x+1,y,num,style,color);
+            set(MAP, x,y,num,style,color);
         }
     }
 }
@@ -493,9 +581,10 @@ void block_A::mvright()
     {               
         clr(MAP, x,y,num,style,color);
         if(!exist(x+1,y,num,style)) {
+            x+=1;
             set(MAP, x,y,num,style,color);
         } else {
-            set(MAP, x-1,y,num,style,color);
+            set(MAP, x,y,num,style,color);
         }
     }
 }
@@ -506,9 +595,10 @@ void block_A::mvdown()
     {               
         clr(MAP, x,y,num,style,color);
         if(!exist(x,y+1,num,style)) {
+            y+=1;
             set(MAP, x,y,num,style,color);
         } else {
-            set(MAP, x,y-1,num,style,color);
+            set(MAP, x,y,num,style,color);
             isend=true;
         }
     }             

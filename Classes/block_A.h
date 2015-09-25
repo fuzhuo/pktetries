@@ -37,19 +37,20 @@ public:
 public:
     block_A(int m_ori,int n_ori);//构造函数
     BB **MAP;
+    BB **shadowMAP;
     BB **nextMAP;
     int M,N;
     void createBlk();//重新置为原值
     int totalstyle(int num1);//记录总的形态数
     int nextstyle(int style1);//下一种形态
     int prestyle(int style1);//前一种形态
-    void setp(BB **MAP, int x2,int y2,cocos2d::Color3B color);//清零
-    void clrp(BB **MAP, int x2,int y2,cocos2d::Color3B color);//置"1"
+    void setp(BB **MAP, int xori, int yori, int x2,int y2,cocos2d::Color3B color);//清零
+    void clrp(BB **MAP, int xori, int yori, int x2,int y2,cocos2d::Color3B color);//置"1"
     void set(BB **MAP, int x1,int y1,int num1,int style1,cocos2d::Color3B color);//画砖块
     void clr(BB **MAP, int x1,int y1,int num1,int style1,cocos2d::Color3B color);//清除砖块
-typedef void (block_A::*fun)(BB **MAP_, int x1, int y1, cocos2d::Color3B color);
+typedef void (block_A::*fun)(BB **MAP_, int xori, int yori, int x1, int y1, cocos2d::Color3B color);
     void doChange(fun func, BB **MAP_, int x1, int y1, int num, int style, cocos2d::Color3B color);
-    bool existp(int x1,int y1);//点是否是实的
+    bool existp(int xori, int yori, int x1,int y1);//点是否是实的
     bool exist(int x1,int y1,int num1,int style1);//是否存在东东
     void mvdown();//下移
     void mvleft();//左移
