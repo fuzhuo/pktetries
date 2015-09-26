@@ -61,6 +61,13 @@ typedef void (block_A::*fun)(BB **MAP_, int xori, int yori, int x1, int y1, coco
     int checkClear();//去掉需要消除的行并下落
     bool gameover();//判断是否游戏结束
     void newGame();
+    void updateShadowMAP();//更新下落影子
+private:
+    int shadow_x;
+    int shadow_y;
+    int shadow_num;
+    int shadow_style;
+    cocos2d::Color3B shadow_color;
 };
 
 #endif //#define __BLOCK_A_H_

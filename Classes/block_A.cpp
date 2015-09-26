@@ -70,11 +70,13 @@ void block_A::newGame()
 {
     isover=false;
     isend=false;
+    shadow_x=-1;
     for(int i1=0;i1<M;i1++){
         for(int j1=0;j1<N;j1++) {
             if(i1==M-1||j1==N-1||i1==0||j1==0) {
                 MAP[i1][j1].value=1;
             } else MAP[i1][j1].value=0;
+            shadowMAP[i1][j1].value=0;
         }
     }
     for (int i=0; i<6; i++) {
@@ -105,7 +107,27 @@ void block_A::createBlk()
     } else {
         isend=false;
         set(MAP, x,y,num,style,color);
+        updateShadowMAP();
     }
+}
+void block_A::updateShadowMAP()
+{
+    clr(MAP, x, y, num, style, color);
+    if (shadow_x != -1) clr(shadowMAP, shadow_x, shadow_y, shadow_num, shadow_style, shadow_color);//clear previous shadow
+    int i=0;
+    while (true) {//try down to the latest position
+        if (exist(x, y+i, num, style)) {
+            break;
+        }
+        i++;
+    }
+    shadow_x=x;
+    shadow_y=y+i-1;
+    shadow_num=num;
+    shadow_style=style;
+    shadow_color=color;
+    set(shadowMAP, shadow_x, shadow_y, shadow_num, shadow_style, shadow_color);//create current shadow
+    set(MAP, x, y, num, style, color);
 }
 //-------------------------------------
 bool block_A::gameover()
@@ -173,17 +195,17 @@ void block_A::doChange(fun func, BB **MAP_, int x1, int y1, int num1, int style1
             switch(style1)
         {
             case 1:
-            /*    *
-             *   o*
-             *   *
-             */
+                /*    *
+                 *   o*
+                 *   *
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,1,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);
                 break;
             case 2:
-            /*
-             *  *o
-             *   **
-             */
+                /*
+                 *  *o
+                 *   **
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,1,color);
                 break;
         }
@@ -192,10 +214,10 @@ void block_A::doChange(fun func, BB **MAP_, int x1, int y1, int num1, int style1
             switch(style1)
         {
             case 1:
-            /*
-             *   o*
-             *   **
-             */
+                /*
+                 *   o*
+                 *   **
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,1,1,color);
                 break;
         }
@@ -204,32 +226,32 @@ void block_A::doChange(fun func, BB **MAP_, int x1, int y1, int num1, int style1
             switch(style1)
         {
             case 1:
-            /*
-             *  *o*
-             *   *
-             */
+                /*
+                 *  *o*
+                 *   *
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);
                 break;
             case 2:
-            /*
-             *   *
-             *   o*
-             *   *
-             */
+                /*
+                 *   *
+                 *   o*
+                 *   *
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,0,color);
                 break;
             case 3:
-            /*
-             *   *
-             *  *o*
-             */
+                /*
+                 *   *
+                 *  *o*
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,0,1,color);
                 break;
             case 4:
-            /*   *
-             *  *o
-             *   *
-             */
+                /*   *
+                 *  *o
+                 *   *
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,-1,0,color);
                 break;
         }
@@ -238,31 +260,31 @@ void block_A::doChange(fun func, BB **MAP_, int x1, int y1, int num1, int style1
             switch(style1)
         {
             case 1:
-            /*
-             *  *o*
-             *  *
-             */
+                /*
+                 *  *o*
+                 *  *
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,-1,1,color);
                 break;
             case 2:
-            /*  **
-             *   o
-             *   *
-             */
+                /*  **
+                 *   o
+                 *   *
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,-1,-1,color);
                 break;
             case 3:
-            /*
-             *    *
-             *  *o*
-             */
+                /*
+                 *    *
+                 *  *o*
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,-1,0,color);(this->*func)(MAP_,x1,y1,1,0,color);(this->*func)(MAP_,x1,y1,1,-1,color);
                 break;
             case 4:
-            /*   *
-             *   o
-             *   **
-             */
+                /*   *
+                 *   o
+                 *   **
+                 */
                 (this->*func)(MAP_,x1,y1,0,0,color);(this->*func)(MAP_,x1,y1,0,-1,color);(this->*func)(MAP_,x1,y1,0,1,color);(this->*func)(MAP_,x1,y1,1,1,color);
                 break;
         }
@@ -342,6 +364,7 @@ void block_A::clr(BB **MAP_, int x1,int y1,int num1,int style1,cocos2d::Color3B 
 
 bool block_A::existp(int xori, int yori, int x1,int y1)
 {
+    if (xori+x1>=M-1 || yori+y1>=N-1 || xori+x1<=0 || yori+y1<=0) return true;
     if(MAP[xori+x1][yori+y1].value==1)
         return true;
     else
@@ -505,6 +528,7 @@ bool block_A::exist(int x1,int y1,int num1,int style1)
         }
             break;
     }
+    //cocos2d::log("exist[%d,%d,%d,%d]=[%d]", x1,y1,num1,style1, temp_vaul);
     return temp_vaul;
 }
 //----------------------------------------------------------------------------------
@@ -516,25 +540,29 @@ void block_A::rotate()
         if(exist(x,y,num,nextstyle(style))==false) {
             style=nextstyle(style);
             set(MAP, x,y,num,style,color);
-        } else if(exist(x-1,y,num,style)==false) {
+            updateShadowMAP();
+        } else if(exist(x-1,y,num,nextstyle(style))==false) {
             x-=1;
             style=nextstyle(style);
             set(MAP, x,y,num,style,color);
-        } else if(exist(x+2,y,num,style)==false) {
-            x+=2;
+            updateShadowMAP();
+        } else if(num==7 && exist(x-2,y,num,nextstyle(style))==false) {
+            x-=2;
             style=nextstyle(style);
             set(MAP, x,y,num,style,color);
-        } else if(exist(x-1,y-1,num,style)==false) {
-            x-=1;y-=1;
+            updateShadowMAP();
+        } else if(exist(x+1,y,num,nextstyle(style))==false) {
+            x+=1;
             style=nextstyle(style);
             set(MAP, x,y,num,style,color);
-        } else {
-            y+=1;
-            style=prestyle(style);
-            set(MAP, x,y,num,prestyle(style),color);
+            updateShadowMAP();
+        } else {//can not rotate do nothing just draw back
+            set(MAP, x,y,num,style,color);
+            updateShadowMAP();
         }
     }
 }
+
 void block_A::rotate_re()
 {
     if(isover==false && isend==false &&speed!=0)
@@ -543,22 +571,25 @@ void block_A::rotate_re()
         if(exist(x,y,num,prestyle(style))==false) {
             style=prestyle(style);
             set(MAP, x,y,num,style,color);
-        } else if(exist(x-1,y,num,style)==false) {
-            x-=1;
+            updateShadowMAP();
+        } else if(exist(x-1,y,num,prestyle(style))==false) {
+            x-=1;                 
             style=prestyle(style);
             set(MAP, x,y,num,style,color);
-        } else if(exist(x+2,y,num,style)==false) {
-            x+=2;
+            updateShadowMAP();
+        } else if(num==7 && exist(x-2,y,num,prestyle(style))==false) {
+            x-=2;
             style=prestyle(style);
             set(MAP, x,y,num,style,color);
-        } else if(exist(x-1,y-1,num,style)==false) {
-            x-=1;y-=1;
+            updateShadowMAP();
+        } else if(exist(x+1,y,num,prestyle(style))==false) {
+            x+=1;
             style=prestyle(style);
             set(MAP, x,y,num,style,color);
+            updateShadowMAP();
         } else {
-            y+=1;
-            style=nextstyle(style);
-            set(MAP, x,y+1,num,nextstyle(style),color);
+            set(MAP, x,y,num,style,color);
+            updateShadowMAP();
         }
     }
 }
@@ -570,6 +601,7 @@ void block_A::mvleft()
         if(exist(x-1,y,num,style)==false) {
             x-=1;
             set(MAP, x,y,num,style,color);
+            updateShadowMAP();
         } else {
             set(MAP, x,y,num,style,color);
         }
@@ -583,6 +615,7 @@ void block_A::mvright()
         if(!exist(x+1,y,num,style)) {
             x+=1;
             set(MAP, x,y,num,style,color);
+            updateShadowMAP();
         } else {
             set(MAP, x,y,num,style,color);
         }
@@ -601,7 +634,7 @@ void block_A::mvdown()
             set(MAP, x,y,num,style,color);
             isend=true;
         }
-    }             
+    }
 }
 
 int block_A::checkClear()
@@ -609,7 +642,7 @@ int block_A::checkClear()
     int templine=0;
     if(isend==true)
     {
-        for(int nn=N-2;nn>=1;nn--)//列标
+        for(int nn=N-2;nn>1;nn--)//列标
         {
             bool line_full=true;
             for(int mm=1;mm<=M-2;mm++)//行标
@@ -622,11 +655,15 @@ int block_A::checkClear()
             if (line_full)
             {
                 templine++;
-                for(int jj=nn;jj>1;jj--)//列标
-                    for(int mm=1;mm<=M-2;mm++)//行标
+                for(int jj=nn;jj>1;jj--)//从清除的行起，开始覆盖
+                    for(int mm=1;mm<=M-2;mm++)//拷贝上一行到下一行
                     {
                         MAP[mm][jj]=MAP[mm][jj-1];//下移一位
                     }
+                for(int mm=1;mm<=M-2;mm++)//清掉无从拷贝的行
+                {
+                    MAP[mm][1].value=0;
+                }
                 nn++;
             }
         }
